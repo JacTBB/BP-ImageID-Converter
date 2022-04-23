@@ -59,27 +59,6 @@ const limiter = rateLimit({
 
 
 
-//Usage
-app.use(async (req, res, next) => {
-    if (req.headers['cf-connecting-ip']) {
-        if (req.headers['roblox-id']) {
-            return next()
-        }
-    }
-    if (req.ip == '::1') {
-        console.log('Local Usage')
-        return next()
-    }
-    if (req.ip == '::ffff:10.138.0.9') {
-        console.log('Local Status Check')
-        return next()
-    }
-
-    console.log(req.headers)
-
-    res.status('403').json({status: 'Forbidden!'})
-})
-
 //Status
 app.get('/', limiter, async (req, res) => {
     res.status('200').json({status: 'Online!', 'Version': Version})
@@ -87,6 +66,7 @@ app.get('/', limiter, async (req, res) => {
 
 //ImageID Converter
 app.get('/:ID', limiter, async (req, res) => {
+    if (!RobloxCheck(req, res)) return
     let imageId = req.params.ID
 
     if (imageId) {
@@ -129,6 +109,23 @@ app.get('/:ID', limiter, async (req, res) => {
         res.status(500).json("Error!")
     }
 })
+
+function RobloxCheck(req, res) {
+    if (req.headers['cf-connecting-ip']) {
+        if (req.headers['roblox-id']) {
+            return true
+        }
+    }
+    if (req.ip == '::1') {
+        console.log('Local Usage')
+        return true
+    }
+
+    console.log(req.headers)
+
+    res.status('403').json({status: 'Forbidden!'})
+    return false
+}
 
 
 

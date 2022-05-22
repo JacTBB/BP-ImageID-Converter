@@ -29,6 +29,8 @@ process.on('unhandledRejection', error => console.error(error))
 // Settings //
 const prefix = ".."
 var Memory = []
+BotLockdown = true
+User_Slow_Down_Rate_Limiter_Memory = []
 
 
 
@@ -139,15 +141,66 @@ client.on("ready", () => {
 
 client.on("messageCreate", (message) => {
     if (message.guildId === null) return
-    if (message.author.id != '241135596959956993') return
     if (message.content.startsWith(prefix) && !message.author.bot) {
         const args = message.content.slice(prefix.length).trim().split(' ')
         const command = args.shift().toLowerCase()
 
+        const ErrorEmbed = new Discord.MessageEmbed()
+        .setTitle('An error has occured!')
+        .setDescription('If error persists, contact Blueprint Support.')
+        .setColor('RED')
+        .setFooter({ text: 'Blueprint ImageID Converter' })
+        .setTimestamp()
+
+        ////// BotLockdown //////
+        if (BotLockdown == true && message.author.id != '241135596959956993' && message.author.id != '234206839544348682' && message.author.id != '742660051227115600') return
+        if (message.author.id == '241135596959956993' || message.author.id == '234206839544348682' || message.author.id == '742660051227115600') {
+            if (command === 'botlockdown') {
+                if (BotLockdown == false) {
+                    BotLockdown = true
+                    client.user.setStatus('dnd')
+                    message.reply('Bot Lockdown Active!').catch(console.error)
+                }
+                else {
+                    message.reply('Bot Lockdown Already Active!').catch(console.error)
+                }
+            }
+            if (command === 'unbotlockdown') {
+                if (BotLockdown == true) {
+                    BotLockdown = false
+                    client.user.setStatus('online')
+                    message.reply('Bot Lockdown Inactive!').catch(console.error)
+                }
+                else {
+                    message.reply('Bot Lockdown Already Inactive!').catch(console.error)
+                }
+            }
+        }
+
+        ////// User Slow Down Rate Limiter //////
+        if (message.content.replaceAll('.', '') == '') return
+        if (User_Slow_Down_Rate_Limiter_Memory[message.author.id]) {
+            const Timestamp = User_Slow_Down_Rate_Limiter_Memory[message.author.id]
+            const Difference = Date.now() - Timestamp
+            if (message.author.id != '241135596959956993') {
+                if (Difference < 5000) {
+                    message.reply('Please slow down!').catch(console.error)
+                    .then(SentMessage => {
+                        return setTimeout(() => {
+                            SentMessage.delete()
+                        }, 5000-Difference+500)
+                    })
+                    return
+                }
+            }
+        }
+        User_Slow_Down_Rate_Limiter_Memory[message.author.id] = Date.now()
+ 
         ////// Commands //////
         if (command === 'help') {
             let Commands = `${prefix}help`.concat(
                 `\n${prefix}botstatus`,
+                `\n${prefix}image [AssetID]`,
                 `\n${prefix}monitor`
             )
 
@@ -175,37 +228,89 @@ client.on("messageCreate", (message) => {
             message.reply({ embeds: [Embed] }).catch(console.error)
         }
 
-        if (command === 'monitor') {
-            var UsageCount = []
-            var UsageList = []
-            for (let Usage of Memory) {
-                if (!UsageCount[Usage]) {
-                    UsageCount[Usage] = 1
-                    UsageList.push(Usage)
+        if (command === 'image') {
+            if (message.guild === null) return message.channel.send({ embeds: [ErrorEmbed] }).catch(console.error)
+            const Guild = client.guilds.cache.find(guild => guild.id == '687883462287425546')
+            Guild.members.fetch(message.author.id)
+            .then(guildMember => {
+                if (guildMember.roles.cache.has('717207731597082647')) {
+                    if (args.length < 1) return message.channel.send({ embeds: [ErrorEmbed] }).catch(console.error)
+
+                    const imageId = args[0]
+                    
+                    axios
+                    .get(`https://assetdelivery.roblox.com/v1/asset/?id=${imageId}`)
+                    .then(function(response) {
+                        if (response.data) {
+                            var xml = xmlparser.xml2json(response.data, {
+                                compact: true,
+                                spaces: 4
+                            })
+                            const parsedXML = JSON.parse(xml)
+                            const resultURL = parsedXML.roblox.Item.Properties.Content.url._text
+                            const result = resultURL.split("=")[1]
+
+                            Memory.push('Discord')
+
+                            const Embed = new Discord.MessageEmbed()
+                            .addField('Input:', `${imageId}`)
+                            .addField('Result:', `${result}`)
+                            .setColor('BLUE')
+                            .setFooter({ text: 'Blueprint ImageID Converter' })
+                            .setTimestamp()
+
+                            message.reply({ embeds: [Embed] })
+                            .catch(console.error)
+                        }
+                    })
+                    .catch(function(error) {
+                        console.log(error);
+                    })
                 }
                 else {
-                    UsageCount[Usage] += 1
-                }
-            }
-
-            setTimeout(() => {
-                var Usages = ''
-                for (let Usage of UsageList) {
-                    Usages += `${Usage} (${UsageCount[Usage]})\n`
-                }
-
-                setTimeout(() => {
-                    if (Usages == '') return message.reply('Empty!')
-    
                     const Embed = new Discord.MessageEmbed()
-                    .setTitle('BIC Monitoring System')
-                    .addField('Memory', Usages)
+                    .setTitle('Unauthorized')
                     .setColor('BLUE')
                     .setFooter({ text: 'Blueprint ImageID Converter' })
                     .setTimestamp()
                     message.reply({ embeds: [Embed] }).catch(console.error)
+                }
+            })
+        }
+
+        if (message.author.id == '241135596959956993') {
+            if (command === 'monitor') {
+                var UsageCount = []
+                var UsageList = []
+                for (let Usage of Memory) {
+                    if (!UsageCount[Usage]) {
+                        UsageCount[Usage] = 1
+                        UsageList.push(Usage)
+                    }
+                    else {
+                        UsageCount[Usage] += 1
+                    }
+                }
+    
+                setTimeout(() => {
+                    var Usages = ''
+                    for (let Usage of UsageList) {
+                        Usages += `${Usage} (${UsageCount[Usage]})\n`
+                    }
+    
+                    setTimeout(() => {
+                        if (Usages == '') return message.reply('Empty!')
+        
+                        const Embed = new Discord.MessageEmbed()
+                        .setTitle('BIC Monitoring System')
+                        .addField('Memory', Usages)
+                        .setColor('BLUE')
+                        .setFooter({ text: 'Blueprint ImageID Converter' })
+                        .setTimestamp()
+                        message.reply({ embeds: [Embed] }).catch(console.error)
+                    }, 100)
                 }, 100)
-            }, 100)
+            }
         }
     }
 })

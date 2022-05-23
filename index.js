@@ -219,7 +219,7 @@ client.on("messageCreate", (message) => {
             .addField('Bot Status', 'Online!')
             .addField('Version', Version)
             .addField('Ping', `${client.ws.ping}ms`)
-            .addField('Stauts Code', `${client.ws.status}`)
+            .addField('Status Code', `${client.ws.status}`)
             .addField('Uptime', Uptime)
             .addField('Ready At', `${client.readyAt}`)
             .setColor('BLUE')

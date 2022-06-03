@@ -177,6 +177,12 @@ client.on("messageCreate", (message) => {
             }
         }
 
+        ////// Account Age Limiter //////
+        if (Date.now() - message.author.createdTimestamp < 5256000000) { //2 months
+            message.reply('Your account is too young!').catch(console.error)
+            return
+        }
+
         ////// User Slow Down Rate Limiter //////
         if (message.content.replaceAll('.', '') == '') return
         if (User_Slow_Down_Rate_Limiter_Memory[message.author.id]) {
@@ -310,6 +316,12 @@ client.on("messageCreate", (message) => {
                         message.reply({ embeds: [Embed] }).catch(console.error)
                     }, 100)
                 }, 100)
+            }
+
+            if (command === 'clearmonitor') {
+                Memory = []
+
+                message.reply('Cleared!')
             }
         }
     }

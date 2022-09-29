@@ -31,6 +31,7 @@ const prefix = ".."
 var Memory = []
 BotLockdown = true
 User_Slow_Down_Rate_Limiter_Memory = []
+var ImageID_Memory = []
 
 
 
@@ -71,6 +72,27 @@ app.get('/:ID', limiter, async (req, res) => {
     if (!RobloxCheck(req, res)) return
     let imageId = req.params.ID
 
+    if (ImageID_Memory[imageId]) {
+        const result = ImageID_Memory[imageId]
+        res.send(result)
+
+        Memory.push(req.headers['roblox-id'])
+
+        const Embed = new Discord.MessageEmbed()
+        .addField('PlaceID:', `${req.headers['roblox-id']}`)
+        .addField('Input:', `${imageId}`)
+        .addField('Result:', `${result}`)
+        .addField('Link:', `https://www.roblox.com/games/${req.headers['roblox-id']}`)
+        .setColor('BLUE')
+        .setFooter({ text: 'Blueprint ImageID Converter' })
+        .setTimestamp()
+
+        client.channels.cache.get('947389966231695391').send({ embeds: [Embed] })
+        .catch(console.error)
+
+        return
+    }
+
     if (imageId) {
         axios
         .get(`https://assetdelivery.roblox.com/v1/asset/?id=${imageId}`)
@@ -86,6 +108,7 @@ app.get('/:ID', limiter, async (req, res) => {
                 res.send(result)
 
                 Memory.push(req.headers['roblox-id'])
+                ImageID_Memory[imageId] = result
 
                 const Embed = new Discord.MessageEmbed()
                 .addField('PlaceID:', `${req.headers['roblox-id']}`)
@@ -97,14 +120,15 @@ app.get('/:ID', limiter, async (req, res) => {
                 .setTimestamp()
 
                 client.channels.cache.get('947389966231695391').send({ embeds: [Embed] })
-                .catch(console.error)}
+                .catch(console.error)
+            }
             else {
                 res.status(500).send("Error!")
             }
         })
         .catch(function(error) {
             console.log(error);
-            res.status(500).send("Error!")
+            res.status(200).send("Already an ImageID!")
         })
     }
     else {
@@ -239,7 +263,8 @@ client.on("messageCreate", (message) => {
             const Guild = client.guilds.cache.find(guild => guild.id == '687883462287425546')
             Guild.members.fetch(message.author.id)
             .then(guildMember => {
-                if (guildMember.roles.cache.has('717207731597082647')) {
+                //Blueprint Team
+                if (guildMember.roles.cache.has('807550843587002379')) {
                     if (args.length < 1) return message.channel.send({ embeds: [ErrorEmbed] }).catch(console.error)
 
                     const imageId = args[0]
@@ -266,11 +291,15 @@ client.on("messageCreate", (message) => {
                             .setTimestamp()
 
                             message.reply({ embeds: [Embed] })
-                            .catch(console.error)
+                            .catch(function(error) {
+                                console.log(error);
+                                message.reply('Already an ImageID!')
+                            })
                         }
                     })
                     .catch(function(error) {
                         console.log(error);
+                        message.reply('Already an ImageID!')
                     })
                 }
                 else {
@@ -284,6 +313,7 @@ client.on("messageCreate", (message) => {
             })
         }
 
+        //Administrator Commands
         if (message.author.id == '241135596959956993') {
             if (command === 'monitor') {
                 var UsageCount = []
@@ -300,20 +330,32 @@ client.on("messageCreate", (message) => {
     
                 setTimeout(() => {
                     var Usages = ''
-                    for (let Usage of UsageList) {
-                        Usages += `${Usage} (${UsageCount[Usage]})\n`
+                    var MinorUsages = ''
+                    for (let Usage of List) {
+                        if (Count[Usage] >= 20) {
+                            Usages += `${Usage} (${UsageCount[Usage]})\n`
+                        }
+                        else {
+                            MinorUsages += `${Usage} (${UsageCount[Usage]})\n`
+                        }
                     }
     
                     setTimeout(() => {
-                        if (Usages == '') return message.reply('Empty!')
-        
-                        const Embed = new Discord.MessageEmbed()
-                        .setTitle('BIC Monitoring System')
-                        .addField('Memory', Usages)
-                        .setColor('BLUE')
-                        .setFooter({ text: 'Blueprint ImageID Converter' })
-                        .setTimestamp()
-                        message.reply({ embeds: [Embed] }).catch(console.error)
+                        if (Usages == '') Usages = 'Empty!'
+                        if (MinorUsages == '') MinorUsages = 'Empty!'
+                        setTimeout(() => {
+                            const Embed = new Discord.EmbedBuilder()
+                            .setTitle('BIC Monitoring System')
+                            .addFields(
+                                {name: 'Total Usages:', value: `${Data.length}`},
+                                {name: 'Usages:', value: Usages},
+                                {name: 'MinorUsages:', value: MinorUsages}
+                            )
+                            .setColor('BLUE')
+                            .setFooter({ text: 'Blueprint ImageID Converter' })
+                            .setTimestamp()
+                            message.reply({ embeds: [Embed] }).catch(console.error)
+                        }, 200)
                     }, 100)
                 }, 100)
             }

@@ -202,7 +202,7 @@ client.on("messageCreate", (message) => {
         }
 
         ////// Account Age Limiter //////
-        if (Date.now() - message.author.createdTimestamp < 5256000000) { //2 months
+        if (Date.now() - message.author.createdTimestamp < 2628000000) { //1 month
             message.reply('Your account is too young!').catch(console.error)
             return
         }

@@ -331,7 +331,7 @@ client.on("messageCreate", (message) => {
                 setTimeout(() => {
                     var Usages = ''
                     var MinorUsages = ''
-                    for (let Usage of List) {
+                    for (let Usage of UsageList) {
                         if (Count[Usage] >= 20) {
                             Usages += `${Usage} (${UsageCount[Usage]})\n`
                         }
@@ -344,13 +344,11 @@ client.on("messageCreate", (message) => {
                         if (Usages == '') Usages = 'Empty!'
                         if (MinorUsages == '') MinorUsages = 'Empty!'
                         setTimeout(() => {
-                            const Embed = new Discord.EmbedBuilder()
+                            const Embed = new Discord.MessageEmbed()
                             .setTitle('BIC Monitoring System')
-                            .addFields(
-                                {name: 'Total Usages:', value: `${Data.length}`},
-                                {name: 'Usages:', value: Usages},
-                                {name: 'MinorUsages:', value: MinorUsages}
-                            )
+                            .addField('Total Usages:', `${Memory.length}`)
+                            .addField('Usages:', Usages)
+                            .addField('MinorUsages:', MinorUsages)
                             .setColor('BLUE')
                             .setFooter({ text: 'Blueprint ImageID Converter' })
                             .setTimestamp()

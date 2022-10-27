@@ -332,7 +332,7 @@ client.on("messageCreate", (message) => {
                     var Usages = ''
                     var MinorUsages = ''
                     for (let Usage of UsageList) {
-                        if (Count[Usage] >= 20) {
+                        if (UsageCount[Usage] >= 20) {
                             Usages += `${Usage} (${UsageCount[Usage]})\n`
                         }
                         else {

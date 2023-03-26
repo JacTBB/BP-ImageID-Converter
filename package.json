@@ -6,6 +6,7 @@
     "axios": "^0.26.1",
     "discord": "^0.8.2",
     "discord.js": "^13.6.0",
+    "dotenv": "^16.0.3",
     "express": "^4.17.3",
     "express-rate-limit": "^6.3.0",
     "pretty-ms": "^7.0.1",

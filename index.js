@@ -13,7 +13,8 @@ const client = new Discord.Client({
         Intents.FLAGS.DIRECT_MESSAGES
     ]
 })
-const token = "OTYzMzE1MTE2NzcyODE4OTQ0.YlUTHQ.dvlf1aWxz5hC-agFgxZLLBJHWow"
+require('dotenv').config()
+const token = process.env.TOKEN
 const app = express()
 app.use(express.json())
 const port = process.env.PORT || 8080
